@@ -5,8 +5,8 @@ const { GoogleGenAI } = require('@google/genai');
 
 const { TELEGRAM_BOT_TOKEN, GEMINI_API_KEY, MINI_APP_URL } = process.env;
 
-if (!TELEGRAM_BOT_TOKEN || !GEMINI_API_KEY || !MINI_APP_URL) {
-  console.error('Missing env vars: TELEGRAM_BOT_TOKEN, GEMINI_API_KEY, MINI_APP_URL');
+if (!TELEGRAM_BOT_TOKEN || !GEMINI_API_KEY) {
+  console.error('Missing env vars: TELEGRAM_BOT_TOKEN, GEMINI_API_KEY');
   process.exit(1);
 }
 
@@ -26,17 +26,11 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 
 bot.onText(/^\/start/, async (msg) => {
   try {
-    await bot.sendMessage(
-      msg.chat.id,
-      'မင်္ဂလာပါ! 👋 ကြိုဆိုပါတယ်။\nအောက်က ခလုတ်ကိုနှိပ်ပြီး Mini App ကို ဝင်ကြည့်နိုင်ပါတယ်။ မေးခွန်းတစ်ခုခု ရိုက်ပို့ရင်လည်း AI က ဖြေပေးပါမယ်။',
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: '🚀 Mini App ဖွင့်မည်', web_app: { url: MINI_APP_URL } }],
-          ],
-        },
-      }
-    );
+    const text = 'မင်္ဂလာပါ! 👋 ကြိုဆိုပါတယ်။ မေးခွန်းတစ်ခုခု ရိုက်ပို့ပါ၊ AI က ဖြေပေးပါမယ်။';
+    const options = MINI_APP_URL
+      ? { reply_markup: { inline_keyboard: [[{ text: '🚀 Mini App ဖွင့်မည်', web_app: { url: MINI_APP_URL } }]] } }
+      : {};
+    await bot.sendMessage(msg.chat.id, text, options);
   } catch (err) {
     console.error('/start error:', err.message);
   }
