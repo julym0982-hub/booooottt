@@ -21,6 +21,40 @@ app.listen(PORT, () => console.log(`HTTP server listening on port ${PORT}`));
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 const MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
+const FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || '';
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function isRetryable(err) {
+  const code = err && (err.status || err.code);
+  return code === 503 || code === 429 || code === 500 || code === 504;
+}
+
+async function askGemini(text) {
+  const models = [MODEL];
+  if (FALLBACK_MODEL && FALLBACK_MODEL !== MODEL) models.push(FALLBACK_MODEL);
+  let lastErr;
+  for (const model of models) {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        return await ai.models.generateContent({
+          model,
+          contents: text,
+          config: {
+            systemInstruction:
+              'Reply in the same language the user writes in. If the user writes in Burmese (Myanmar), reply in Burmese.',
+          },
+        });
+      } catch (err) {
+        lastErr = err;
+        console.error(`Gemini error [${model}] attempt ${attempt + 1}:`, err.status || '', String(err.message).slice(0, 200));
+        if (!isRetryable(err)) throw err;
+        await sleep(1500 * (attempt + 1));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 // ---- Telegram ----
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
 
@@ -43,10 +77,7 @@ bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   try {
     bot.sendChatAction(chatId, 'typing').catch(() => {});
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents: text,
-    });
+    const response = await askGemini(text);
     const reply = (response && response.text) || 'အဖြေ မရရှိပါ။ ခဏနေမှ ပြန်စမ်းကြည့်ပေးပါ။';
     // Telegram limit is 4096 chars per message
     for (let i = 0; i < reply.length; i += 4000) {
