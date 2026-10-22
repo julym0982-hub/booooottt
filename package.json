@@ -1,7 +1,7 @@
 {
   "name": "telegram-gemini-bot",
   "version": "1.0.0",
-  "description": "Telegram bot with Mini App button and Gemini AI replies",
+  "description": "Telegram bot with Mini App button, Gemini AI replies and Groq fallback",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
