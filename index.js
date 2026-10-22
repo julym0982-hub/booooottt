@@ -53,9 +53,11 @@ bot.on('message', async (msg) => {
       await bot.sendMessage(chatId, reply.slice(i, i + 4000));
     }
   } catch (err) {
-    console.error('Gemini error:', err.message);
+    console.error('Gemini error:', err.status || '', err.message);
     try {
-      await bot.sendMessage(chatId, 'ခဏနေမှ ပြန်စမ်းကြည့်ပေးပါ 🙏');
+      const base = 'ခဏနေမှ ပြန်စမ်းကြည့်ပေးပါ 🙏';
+      const debug = process.env.DEBUG === 'true' ? `\n\n[DEBUG] ${String(err.message).slice(0, 500)}` : '';
+      await bot.sendMessage(chatId, base + debug);
     } catch (e) {
       console.error('Send error:', e.message);
     }
