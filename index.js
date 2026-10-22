@@ -19,7 +19,7 @@ app.listen(PORT, () => console.log(`HTTP server listening on port ${PORT}`));
 
 // ---- Gemini ----
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-const MODEL = 'gemini-2.5-flash';
+const MODEL = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
 // ---- Telegram ----
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true });
